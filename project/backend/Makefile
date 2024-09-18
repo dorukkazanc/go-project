@@ -28,6 +28,7 @@ run: swag build
 	$(BUILD_DIR)/$(APP_NAME)
 
 migrate.up:
+	sleep 5 # wait for postgres to start
 	migrate -path $(MIGRATIONS_FOLDER) -database "$(DATABASE_URL)" up
 
 migrate.down:
