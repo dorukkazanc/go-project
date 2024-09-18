@@ -1,23 +1,36 @@
-FROM golang:1.17-alpine AS builder
+# 1. Aşama: Build aşaması
+FROM golang:1.23-alpine AS builder
 
-# Move to working directory (/build).
-WORKDIR /build
+# Proje için çalışma dizinine geç
+WORKDIR /app
 
-# Copy and download dependency using go mod.
+# Go mod dosyalarını kopyala ve bağımlılıkları indir
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the code into the container.
+# Air'ı Go modülü olarak yükleyelim
+RUN go install github.com/air-verse/air@latest
+
+# Tüm proje dosyalarını kopyala
 COPY . .
 
-# Set necessary environmet variables needed for our image and build the API server.
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-RUN go build -ldflags="-s -w" -o apiserver .
+# Go uygulamasını üretim için derle
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/myapp .
 
-FROM scratch
+# 2. Aşama: Üretim aşaması
+FROM alpine:latest
 
-# Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/build/apiserver", "/build/.env", "/"]
+# Zaman dilimi verilerini eklemek için tzdata paketini kur
+RUN apk add --no-cache tzdata
 
-# Command to run when starting the container.
-ENTRYPOINT ["/apiserver"]
+# Derlenmiş binary'yi kopyala
+COPY --from=builder /app/myapp /myapp
+
+# Config veya diğer statik dosyaları kopyala
+# COPY --from=builder /app/config.yaml /config.yaml
+
+# Çalıştırılacak komutu tanımla
+ENTRYPOINT ["/myapp"]
+
+# Uygulamanın dinlediği portu belirt
+EXPOSE 5000
