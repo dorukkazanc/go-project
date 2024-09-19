@@ -1,3 +1,5 @@
+-- Description: The SQL script to create the user_profiles table. - 000003_create_profile_table.up.sql
+
 -- Add UUID extension if not exists
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -23,24 +25,14 @@ CREATE TABLE user_profiles (
 CREATE INDEX idx_user_profiles_user_id ON user_profiles (user_id);
 
 -- Insert mock data into user_profiles based on the mock users
-INSERT INTO user_profiles (profile_id, user_id, first_name, last_name, bio, avatar_url, created_at)
-VALUES
-    (
-        uuid_generate_v4(), 
-        '11111111-1111-1111-1111-111111111111',  -- John Doe's user_id
-        'John', 
-        'Doe', 
-        'Software Engineer with 10 years of experience in backend development.', 
-        'https://example.com/john.jpg', 
-        NOW()
-    ),
-    (
-        uuid_generate_v4(), 
-        '22222222-2222-2222-2222-222222222222',  -- Jane Smith's user_id
-        'Jane', 
-        'Smith', 
-        'Experienced Product Manager passionate about user experience and design.', 
-        'https://example.com/jane.jpg', 
-        NOW()
-    );
+
+INSERT INTO user_profiles (user_id, first_name, last_name, bio, avatar_url)
+SELECT 
+    id,
+    user_attrs->>'first_name',
+    user_attrs->>'last_name',
+    user_attrs->>'about',
+    user_attrs->>'picture'
+FROM users
+WHERE email IN ('john.doe@example.com', 'jane.smith@example.com');
 

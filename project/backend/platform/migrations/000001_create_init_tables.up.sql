@@ -1,3 +1,5 @@
+-- Description: Create initial tables - 000001_create_init_tables.up.sql
+
 -- Add UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

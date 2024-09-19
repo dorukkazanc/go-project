@@ -13,6 +13,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - go_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -39,6 +44,23 @@ services:
       - postgres
     ports:
       - "5000:5000"
+    networks:
+      - go_network
+
+  migrate:
+    image: migrate/migrate
+    container_name: go_migrate
+    entrypoint: [
+      "migrate", 
+      "-path", "/migrations", 
+      "-database", "postgres://root:123@go_postgres:5432/postgres?sslmode=disable", 
+      "up"
+    ]
+    volumes:
+      - ./backend/platform/migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - go_network
 
